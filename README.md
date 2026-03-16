@@ -22,8 +22,8 @@ Projekt składa się z trzech core-modułów:
 1.  Upewnij się, że masz zainstalowaną **Ollama**.
 2.  Pobierz wymagane modele (rekomendowane):
     ```bash
-    ollama pull qwen2.5:7b  # Lub qwen3.5:9b / llama3
-    ollama pull mxbai-embed-large:latest
+    ollama pull mxbai-embed-large:latest  # WYMAGANY (do pamięci RAG)
+    ollama pull qwen2.5:7b                # Lub qwen3.5:9b / llama3 (do myślenia)
     ```
 3.  Uruchom system za pomocą pliku:
     `start_gnosis_lsr.bat` lub `python synthetic_trainer.py`
