@@ -4,6 +4,7 @@ import re
 import math
 import os
 import time
+import sys
 from typing import List, Dict, Any
 
 # ==========================================
@@ -14,7 +15,28 @@ class LightweightRAG:
         self.embed_model = embed_model
         self.memory_file = memory_file
         self.memory = [] # Lista słowników: {"text": str, "vector": list, "metadata": dict}
+        self._ensure_model_exists()
         self.load_memory()
+
+    def _ensure_model_exists(self):
+        """Sprawdza czy model embeddingowy jest pobrany w Ollama."""
+        try:
+            response = ollama.list()
+            if hasattr(response, 'models'):
+                installed = [m.model for m in response.models]
+            else:
+                installed = [m.get('model', m.get('name', '')) for m in response.get('models', [])]
+            
+            if self.embed_model not in installed:
+                print(f"\n" + "!"*50)
+                print(f"  [KRYTYCZNY BLAD] BRAK MODELU RAG: {self.embed_model}")
+                print(f"  Wymagany do dzialania pamieci wektorowej!")
+                print(f"  ROZWIAZANIE: Otworz terminal i wpisz:")
+                print(f"  ollama pull {self.embed_model}")
+                print("!"*50 + "\n")
+                sys.exit(1)
+        except Exception as e:
+            print(f"[RAG] Nie mozna polaczyc sie z Ollama w celu weryfikacji modeli: {e}")
 
     def save_memory(self):
         """Zapisuje pamięć do pliku JSON."""
@@ -133,6 +155,7 @@ class LSREngine:
         self.llm_model = llm_model
         self.temperature = temperature
         self.top_p = top_p
+        self._ensure_model_exists()
         self.system_prompt = """
         Jesteś modułem LSR (Loop Synthetic Reasoning) w architekturze autonomicznego Agenta. 
         Twoim celem jest działanie jako "Wewnętrzne Laboratorium": przeprowadzasz syntezę w przestrzeni ukrytej, 
@@ -155,6 +178,25 @@ class LSREngine:
         
         UWAGA: Jeśli nowa prawda unieważnia Twoją poprzednią wiedzę (z faktów RAG), wpisz ID starych perełek do listy 'deprecate_ids'.
         """
+
+    def _ensure_model_exists(self):
+        """Sprawdza czy model myślowy jest pobrany w Ollama."""
+        try:
+            response = ollama.list()
+            if hasattr(response, 'models'):
+                installed = [m.model for m in response.models]
+            else:
+                installed = [m.get('model', m.get('name', '')) for m in response.get('models', [])]
+            
+            if self.llm_model not in installed:
+                print(f"\n" + "!"*50)
+                print(f"  [KRYTYCZNY BLAD] BRAK MODELU MYSLI: {self.llm_model}")
+                print(f"  ROZWIAZANIE: Otworz terminal i wpisz:")
+                print(f"  ollama pull {self.llm_model}")
+                print("!"*50 + "\n")
+                sys.exit(1)
+        except Exception:
+            pass # Blad Ollamy jest juz obsulgiwany w RAG
 
     def synthesize(self, problem: str, context: List[dict]) -> dict:
         context_str = "\n".join([f"- {c['text']}" for c in context]) if context else "Brak danych historycznych."
